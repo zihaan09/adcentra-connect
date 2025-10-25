@@ -1,31 +1,87 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, CreditCard, Users, Shield, Upload } from "lucide-react";
+import { Building2, CreditCard, Users, Shield, Upload, Plus, TrendingUp, Edit, Settings, Key, Bell } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { AddFundsModal } from "@/components/wallet/AddFundsModal";
+import { EditProfileModal, AddTeamMemberModal, ChangePasswordModal, NotificationSettingsModal } from "@/components/profile/ProfileManagement";
+import { useWalletStore, useAuthStore } from "@/store";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function AdvertiserProfile() {
+  const [showAddFunds, setShowAddFunds] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showAddTeamMember, setShowAddTeamMember] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+
+  const { user } = useAuthStore();
+  const { getWalletByUser, getTransactionsByUser } = useWalletStore();
+
+  const wallet = user ? getWalletByUser(user.id) : undefined;
+  const transactions = user ? getTransactionsByUser(user.id) : [];
+
+  // Mock team members data
   const teamMembers = [
-    { name: "Rahul Kumar", email: "rahul@company.com", role: "Admin", status: "Active" },
-    { name: "Priya Sharma", email: "priya@company.com", role: "Manager", status: "Active" },
-    { name: "Amit Patel", email: "amit@company.com", role: "Viewer", status: "Invited" },
+    {
+      id: "1",
+      name: "John Smith",
+      email: "john@acme.com",
+      role: "admin" as const,
+      status: "active" as const,
+      joinedAt: new Date("2024-01-15"),
+    },
+    {
+      id: "2",
+      name: "Sarah Johnson",
+      email: "sarah@acme.com",
+      role: "member" as const,
+      status: "active" as const,
+      joinedAt: new Date("2024-02-20"),
+    },
+    {
+      id: "3",
+      name: "Mike Wilson",
+      email: "mike@acme.com",
+      role: "viewer" as const,
+      status: "pending" as const,
+      joinedAt: new Date("2024-03-10"),
+    },
   ];
+
+  const handleAddTeamMember = (member: any) => {
+    // In a real app, this would call an API
+    console.log("Adding team member:", member);
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <p className="text-muted-foreground mt-1">Manage your account settings</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Profile</h1>
+          <p className="text-muted-foreground mt-1">Manage your account and team</p>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setShowEditProfile(true)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Profile
+          </Button>
+          <Button variant="outline" onClick={() => setShowNotificationSettings(true)}>
+            <Bell className="mr-2 h-4 w-4" />
+            Notifications
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="company" className="w-full">
+      <Tabs defaultValue="overview" className="w-full">
         <TabsList>
-          <TabsTrigger value="company">
+          <TabsTrigger value="overview">
             <Building2 className="mr-2 h-4 w-4" />
-            Company Info
+            Overview
           </TabsTrigger>
           <TabsTrigger value="team">
             <Users className="mr-2 h-4 w-4" />
@@ -33,7 +89,7 @@ export default function AdvertiserProfile() {
           </TabsTrigger>
           <TabsTrigger value="billing">
             <CreditCard className="mr-2 h-4 w-4" />
-            Billing & Wallet
+            Billing
           </TabsTrigger>
           <TabsTrigger value="security">
             <Shield className="mr-2 h-4 w-4" />
@@ -41,45 +97,60 @@ export default function AdvertiserProfile() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="company" className="space-y-4">
+        <TabsContent value="overview" className="space-y-4">
           <Card className="shadow-soft">
             <CardHeader>
               <CardTitle>Company Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="bg-gradient-primary text-white text-2xl">AC</AvatarFallback>
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback className="bg-gradient-primary text-white text-lg">
+                    {user?.companyName?.charAt(0) || 'A'}
+                  </AvatarFallback>
                 </Avatar>
-                <Button variant="outline" size="sm">
-                  <Upload className="mr-2 h-3 w-3" />
-                  Upload Logo
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company-name">Company Name</Label>
-                  <Input id="company-name" defaultValue="Acme Corporation" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gst">GST Number</Label>
-                  <Input id="gst" defaultValue="22AAAAA0000A1Z5" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="contact@acme.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" defaultValue="+91 98765 43210" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" defaultValue="123, MG Road, Bangalore - 560001" />
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold">{user?.companyName || 'ACME Corp'}</h3>
+                  <p className="text-muted-foreground">{user?.email || 'advertiser@acme.com'}</p>
+                  <Badge variant="outline" className="mt-1">Advertiser</Badge>
                 </div>
               </div>
-              <div className="flex justify-end">
-                <Button className="bg-gradient-primary">Save Changes</Button>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">GST Number:</span>
+                  <p className="font-medium">{user?.gstNumber || '22AAAAA0000A1Z5'}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Phone:</span>
+                  <p className="font-medium">{user?.phone || '+91 9876543210'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">Address:</span>
+                  <p className="font-medium">{user?.address || '123 Business Park, Mumbai, Maharashtra 400001'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-soft">
+            <CardHeader>
+              <CardTitle>Account Statistics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-primary">12</div>
+                  <div className="text-sm text-muted-foreground">Active RFPs</div>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-success">8</div>
+                  <div className="text-sm text-muted-foreground">Completed Campaigns</div>
+                </div>
+                <div className="text-center p-4 border rounded-lg">
+                  <div className="text-2xl font-bold text-warning">₹2.5L</div>
+                  <div className="text-sm text-muted-foreground">Total Spent</div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -87,22 +158,22 @@ export default function AdvertiserProfile() {
 
         <TabsContent value="team" className="space-y-4">
           <Card className="shadow-soft">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Team Members</CardTitle>
-              <Button size="sm" className="bg-gradient-primary">
-                <Users className="mr-2 h-3 w-3" />
-                Invite Member
-              </Button>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Team Members</CardTitle>
+                <Button onClick={() => setShowAddTeamMember(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Member
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {teamMembers.map((member, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-4">
+                {teamMembers.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {member.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
+                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">{member.name}</p>
@@ -110,10 +181,13 @@ export default function AdvertiserProfile() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{member.role}</Badge>
-                      <Badge className={member.status === "Active" ? "bg-success text-success-foreground" : "bg-warning text-warning-foreground"}>
+                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
                         {member.status}
                       </Badge>
+                      <Badge variant="outline">{member.role}</Badge>
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -131,9 +205,17 @@ export default function AdvertiserProfile() {
               <div className="flex items-center justify-between p-6 bg-gradient-primary rounded-lg text-white">
                 <div>
                   <p className="text-sm opacity-90">Available Balance</p>
-                  <p className="text-4xl font-bold mt-2">₹2,45,000</p>
+                  <p className="text-4xl font-bold mt-2">
+                    {formatCurrency(wallet?.balance || 0)}
+                  </p>
                 </div>
-                <Button variant="secondary">Add Funds</Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowAddFunds(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Funds
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -143,17 +225,15 @@ export default function AdvertiserProfile() {
               <CardTitle>Payment Methods</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="p-4 border rounded-lg flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                    CARD
-                  </div>
+                  <CreditCard className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">•••• •••• •••• 4242</p>
+                    <p className="font-medium">**** **** **** 1234</p>
                     <p className="text-sm text-muted-foreground">Expires 12/25</p>
                   </div>
                 </div>
-                <Badge>Primary</Badge>
+                <Badge variant="outline">Primary</Badge>
               </div>
               <Button variant="outline" className="w-full">
                 <CreditCard className="mr-2 h-4 w-4" />
@@ -161,31 +241,131 @@ export default function AdvertiserProfile() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card className="shadow-soft">
+            <CardHeader>
+              <CardTitle>Transaction History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {transactions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-4" />
+                  <p>No transactions yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {transactions.slice(0, 10).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          transaction.type === 'credit'
+                            ? 'bg-success text-success-foreground'
+                            : 'bg-destructive text-destructive-foreground'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}
+                        </div>
+                        <div>
+                          <p className="font-medium">{transaction.description}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(transaction.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${
+                          transaction.type === 'credit' ? 'text-success' : 'text-destructive'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                        </p>
+                        {transaction.reference && (
+                          <p className="text-xs text-muted-foreground">{transaction.reference}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
           <Card className="shadow-soft">
             <CardHeader>
-              <CardTitle>Password & Security</CardTitle>
+              <CardTitle>Security Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Key className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Password</p>
+                    <p className="text-sm text-muted-foreground">Last changed 3 months ago</p>
+                  </div>
+                </div>
+                <Button variant="outline" onClick={() => setShowChangePassword(true)}>
+                  Change Password
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
+
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Two-Factor Authentication</p>
+                    <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                  </div>
+                </div>
+                <Button variant="outline">
+                  Enable 2FA
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input id="confirm-password" type="password" />
+
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Notification Preferences</p>
+                    <p className="text-sm text-muted-foreground">Manage your notification settings</p>
+                  </div>
+                </div>
+                <Button variant="outline" onClick={() => setShowNotificationSettings(true)}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
               </div>
-              <Button className="bg-gradient-primary">Update Password</Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <AddFundsModal
+        isOpen={showAddFunds}
+        onClose={() => setShowAddFunds(false)}
+      />
+
+      <EditProfileModal
+        isOpen={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
+        user={user}
+      />
+
+      <AddTeamMemberModal
+        isOpen={showAddTeamMember}
+        onClose={() => setShowAddTeamMember(false)}
+        onAddMember={handleAddTeamMember}
+      />
+
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
+
+      <NotificationSettingsModal
+        isOpen={showNotificationSettings}
+        onClose={() => setShowNotificationSettings(false)}
+      />
     </div>
   );
 }
