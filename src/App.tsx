@@ -12,14 +12,18 @@ import AdvertiserScreens from "./pages/advertiser/AdvertiserScreens";
 import AdvertiserCampaigns from "./pages/advertiser/AdvertiserCampaigns";
 import AdvertiserSupport from "./pages/advertiser/AdvertiserSupport";
 import AdvertiserProfile from "./pages/advertiser/AdvertiserProfile";
+import RFPDetailsPage from "./pages/advertiser/RFPDetailsPage";
+import CampaignDetailsPage from "./pages/advertiser/CampaignDetailsPage";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import OwnerScreens from "./pages/owner/OwnerScreens";
 import OwnerRequests from "./pages/owner/OwnerRequests";
 import OwnerCampaigns from "./pages/owner/OwnerCampaigns";
 import OwnerSupport from "./pages/owner/OwnerSupport";
 import OwnerProfile from "./pages/owner/OwnerProfile";
+import OwnerCampaignDetailsPage from "./pages/owner/OwnerCampaignDetailsPage";
 import { useAuthStore } from "./store";
 import { seedAllData } from "./lib/seedData";
+import { timerService } from "./store/timerStore";
 import { 
   useRFPStore, 
   useProposalStore, 
@@ -74,8 +78,15 @@ const App = () => {
         useSupportTicketStore.setState({ tickets: seedData.supportTickets });
         useChatStore.setState({ messages: seedData.chatMessages });
         console.log('Stores seeded successfully');
+        
+        // Start timer service after stores are initialized
+        timerService.start();
+        console.log('Timer service started');
       } else {
         console.log('Stores already have data, skipping seed');
+        // Start timer service even if stores already have data
+        timerService.start();
+        console.log('Timer service started');
       }
     } catch (error) {
       console.error('Error initializing stores:', error);
@@ -143,6 +154,48 @@ const App = () => {
               } 
             />
             
+            {/* Additional Advertiser Routes */}
+            <Route 
+              path="/advertiser/screens/new-rfp" 
+              element={
+                <ProtectedRoute requiredRole="advertiser">
+                  <DashboardLayout role="advertiser">
+                    <AdvertiserScreens />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/advertiser/screens/screenwise" 
+              element={
+                <ProtectedRoute requiredRole="advertiser">
+                  <DashboardLayout role="advertiser">
+                    <AdvertiserScreens />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/advertiser/screens/:rfpId/details" 
+              element={
+                <ProtectedRoute requiredRole="advertiser">
+                  <DashboardLayout role="advertiser">
+                    <RFPDetailsPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/advertiser/campaigns/:id" 
+              element={
+                <ProtectedRoute requiredRole="advertiser">
+                  <DashboardLayout role="advertiser">
+                    <CampaignDetailsPage />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Media Owner Routes */}
             <Route 
               path="/owner" 
@@ -200,6 +253,18 @@ const App = () => {
                 <ProtectedRoute requiredRole="owner">
                   <DashboardLayout role="owner">
                     <OwnerProfile />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Additional Owner Routes */}
+            <Route 
+              path="/owner/campaigns/:id" 
+              element={
+                <ProtectedRoute requiredRole="owner">
+                  <DashboardLayout role="owner">
+                    <OwnerCampaignDetailsPage />
                   </DashboardLayout>
                 </ProtectedRoute>
               } 

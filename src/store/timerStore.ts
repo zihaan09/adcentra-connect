@@ -190,10 +190,10 @@ class TimerService {
 // Create singleton instance
 export const timerService = new TimerService();
 
-// Auto-start timer service when module loads
-if (typeof window !== 'undefined') {
-  timerService.start();
-}
+// Don't auto-start timer service - let App component handle initialization
+// if (typeof window !== 'undefined') {
+//   timerService.start();
+// }
 
 // Timer Store for React components
 interface TimerStore {
@@ -203,7 +203,7 @@ interface TimerStore {
   clearAllTimers: () => void;
 }
 
-export const useTimerStore = create<TimerStore>((set, get) => ({
+export const useTimerStore = create<TimerStore>()((set, get) => ({
   timers: new Map(),
   
   startTimer: (key: string, callback: () => void, interval: number) => {

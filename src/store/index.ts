@@ -335,6 +335,9 @@ interface CampaignStore {
   getCampaignsByOwner: (ownerId: string) => Campaign[];
   approveCampaign: (id: string) => void;
   completeCampaign: (id: string) => void;
+  settleFinalPayment: (campaignId: string, advertiserId: string, ownerId: string) => boolean;
+  uploadCreative: (campaignId: string, files: File[]) => void;
+  uploadProofOfPlay: (campaignId: string, files: File[]) => void;
 }
 
 export const useCampaignStore = create<CampaignStore>()(
@@ -416,6 +419,97 @@ export const useCampaignStore = create<CampaignStore>()(
               ? Object.assign({}, campaign, {
                   status: 'completed' as const,
                   completedAt: new Date().toISOString()
+                }) 
+              : campaign
+          )
+        }));
+      },
+      
+      settleFinalPayment: (campaignId: string, advertiserId: string, ownerId: string) => {
+        const campaign = get().campaigns.find(c => c.id === campaignId);
+        if (!campaign || campaign.status !== 'completed') return false;
+        
+        const success = useWalletStore.getState().deductFunds(
+          advertiserId,
+          campaign.balanceAmount,
+          `Final payment for campaign ${campaign.campaignName}`,
+          campaignId
+        );
+        
+        if (success) {
+          // Transfer to owner
+          useWalletStore.getState().addFunds(ownerId, campaign.balanceAmount);
+          
+          // Update campaign status
+          set(state => ({
+            campaigns: state.campaigns.map(c => 
+              c.id === campaignId 
+                ? Object.assign({}, c, { 
+                    status: 'settled' as const,
+                    settledAt: new Date().toISOString()
+                  }) 
+                : c
+            )
+          }));
+          
+          // Notify both parties
+          useNotificationStore.getState().addNotification({
+            userId: advertiserId,
+            type: 'payment',
+            title: 'Final Payment Processed',
+            message: `Final payment of ₹${campaign.balanceAmount} has been processed for campaign "${campaign.campaignName}".`,
+            read: false,
+          });
+          
+          useNotificationStore.getState().addNotification({
+            userId: ownerId,
+            type: 'payment',
+            title: 'Final Payment Received',
+            message: `Final payment of ₹${campaign.balanceAmount} has been received for campaign "${campaign.campaignName}".`,
+            read: false,
+          });
+        }
+        
+        return success;
+      },
+      
+      uploadCreative: (campaignId: string, files: File[]) => {
+        const uploadedFiles = files.map(file => ({
+          id: `creative_${Date.now()}_${Math.random()}`,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+          uploadedAt: new Date(),
+        }));
+        
+        set(state => ({
+          campaigns: state.campaigns.map(campaign => 
+            campaign.id === campaignId 
+              ? Object.assign({}, campaign, {
+                  creatives: [...(campaign.creatives || []), ...uploadedFiles],
+                  status: 'pending_approval' as const
+                }) 
+              : campaign
+          )
+        }));
+      },
+      
+      uploadProofOfPlay: (campaignId: string, files: File[]) => {
+        const uploadedProofs = files.map(file => ({
+          id: `proof_${Date.now()}_${Math.random()}`,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file),
+          uploadedAt: new Date(),
+        }));
+        
+        set(state => ({
+          campaigns: state.campaigns.map(campaign => 
+            campaign.id === campaignId 
+              ? Object.assign({}, campaign, {
+                  proofOfPlay: [...(campaign.proofOfPlay || []), ...uploadedProofs]
                 }) 
               : campaign
           )
@@ -699,9 +793,11 @@ export const useSupportTicketStore = create<SupportTicketStore>()(
           id: generateTicketId(),
           userId,
           subject,
+          priority: 'medium',
           category: category as any,
           status: 'open',
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           messages: [{
             id: generateId(),
             ticketId: '',
@@ -709,6 +805,7 @@ export const useSupportTicketStore = create<SupportTicketStore>()(
             senderType: 'user',
             message,
             createdAt: new Date().toISOString(),
+            timestamp: new Date(),
           }],
         };
         
@@ -734,6 +831,7 @@ export const useSupportTicketStore = create<SupportTicketStore>()(
           senderType,
           message,
           createdAt: new Date().toISOString(),
+          timestamp: new Date(),
         };
         
         set(state => ({
@@ -776,6 +874,7 @@ export const useChatStore = create<ChatStore>()(
           senderType,
           message,
           createdAt: new Date().toISOString(),
+          timestamp: new Date(),
           read: false,
         };
         

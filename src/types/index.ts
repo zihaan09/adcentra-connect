@@ -83,13 +83,14 @@ export interface Campaign {
   totalAmount: number;
   advanceAmount: number;
   balanceAmount: number;
-  status: 'draft' | 'pending_approval' | 'live' | 'completed';
+  status: 'draft' | 'pending_approval' | 'live' | 'completed' | 'settled';
   createdAt: string;
   creatives?: CreativeFile[];
   po?: string;
   proofOfPlay?: ProofFile[];
   approvedAt?: string;
   completedAt?: string;
+  settledAt?: string;
 }
 
 export interface CampaignScreen {

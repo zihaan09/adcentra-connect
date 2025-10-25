@@ -30,6 +30,7 @@ import { formatCurrency, formatDate, formatDateTime, getCampaignStatusColor } fr
 import { Campaign, CampaignStatus } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 import { CampaignDaysLeft } from '@/components/timers/CountdownTimer';
+import { FinalPaymentModal } from './FinalPaymentModal';
 
 interface CampaignManagementModalProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export function CampaignManagementModal({ isOpen, onClose, campaignId }: Campaig
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCreativeUpload, setShowCreativeUpload] = useState(false);
   const [showProofUpload, setShowProofUpload] = useState(false);
+  const [showFinalPayment, setShowFinalPayment] = useState(false);
 
   const campaign = campaigns.find(c => c.id === campaignId);
   
@@ -214,6 +216,25 @@ export function CampaignManagementModal({ isOpen, onClose, campaignId }: Campaig
                 </>
               )}
             </Button>
+          </div>
+        );
+      case 'completed':
+        return (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowFinalPayment(true)}
+              className="bg-gradient-primary"
+            >
+              <DollarSign className="mr-2 h-4 w-4" />
+              Settle Final Payment
+            </Button>
+          </div>
+        );
+      case 'settled':
+        return (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-sm font-medium">Payment Settled</span>
           </div>
         );
       default:
@@ -476,6 +497,15 @@ export function CampaignManagementModal({ isOpen, onClose, campaignId }: Campaig
             </DialogContent>
           </Dialog>
         )}
+        
+        {/* Final Payment Modal */}
+        {showFinalPayment && (
+          <FinalPaymentModal
+            isOpen={showFinalPayment}
+            onClose={() => setShowFinalPayment(false)}
+            campaign={campaign}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -519,6 +549,7 @@ export function CampaignList({ campaigns, onManage }: CampaignListProps) {
           <option value="pending_approval">Pending Approval</option>
           <option value="live">Live</option>
           <option value="completed">Completed</option>
+          <option value="settled">Settled</option>
         </select>
       </div>
 
