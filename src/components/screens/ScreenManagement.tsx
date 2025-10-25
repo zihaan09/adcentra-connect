@@ -85,33 +85,33 @@ export function AddScreenModal({ isOpen, onClose, screen }: AddScreenModalProps)
     setIsSubmitting(true);
     
     try {
-      const screenData: Screen = {
-        id: screen?.id || `SCREEN${Date.now()}`,
-        ownerId: user.id,
+      const screenData = {
         name: data.name,
         city: data.city,
         location: data.location,
-        type: data.type,
+        type: data.type as 'digital' | 'static',
+        environment: 'outdoor' as const,
+        format: data.format,
         size: data.size,
         illumination: data.illumination,
-        format: data.format,
-        pricePerDay: data.pricePerDay,
-        description: data.description || '',
-        specifications: data.specifications || '',
-        imageUrl: data.imageUrl || '',
-        status: 'active',
-        createdAt: screen?.createdAt || new Date(),
-        updatedAt: new Date(),
+        baseRate: data.pricePerDay,
+        discountedRate: data.pricePerDay,
       };
 
       if (screen) {
-        updateScreen(screen.id, screenData);
+        updateScreen(screen.id, {
+          ...screenData,
+          pricePerDay: data.pricePerDay,
+          description: data.description || '',
+          specifications: data.specifications || '',
+          imageUrl: data.imageUrl || '',
+        });
         toast({
           title: "Screen Updated",
           description: `Screen "${data.name}" has been updated successfully.`,
         });
       } else {
-        createScreen(screenData);
+        createScreen(screenData, user.id);
         toast({
           title: "Screen Added",
           description: `Screen "${data.name}" has been added to your inventory.`,

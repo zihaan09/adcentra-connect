@@ -60,17 +60,7 @@ export function ChatModal({ isOpen, onClose, rfpId, advertiserId, ownerId }: Cha
   const handleSendMessage = () => {
     if (!newMessage.trim() || !user) return;
 
-    const message: ChatMessage = {
-      id: `MSG${Date.now()}`,
-      rfpId,
-      senderId: user.id,
-      senderType: user.role === 'advertiser' ? 'advertiser' : 'owner',
-      message: newMessage.trim(),
-      timestamp: new Date(),
-      read: false,
-    };
-
-    addMessage(message);
+    addMessage(rfpId, user.id, user.role === 'advertiser' ? 'advertiser' : 'owner', newMessage.trim());
     setNewMessage('');
     
     // Simulate other party typing
@@ -78,16 +68,9 @@ export function ChatModal({ isOpen, onClose, rfpId, advertiserId, ownerId }: Cha
     
     // Simulate auto-reply after delay (for demo purposes)
     setTimeout(() => {
-      const autoReply: ChatMessage = {
-        id: `MSG${Date.now() + 1}`,
-        rfpId,
-        senderId: user.role === 'advertiser' ? ownerId : advertiserId,
-        senderType: user.role === 'advertiser' ? 'owner' : 'advertiser',
-        message: getAutoReplyMessage(newMessage),
-        timestamp: new Date(),
-        read: false,
-      };
-      addMessage(autoReply);
+      const replyerId = user.role === 'advertiser' ? ownerId : advertiserId;
+      const replyerType = user.role === 'advertiser' ? 'owner' : 'advertiser';
+      addMessage(rfpId, replyerId, replyerType as 'advertiser' | 'owner', getAutoReplyMessage(newMessage));
     }, 3000);
   };
 

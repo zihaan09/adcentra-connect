@@ -118,16 +118,12 @@ export default function AdvertiserProfile() {
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">GST Number:</span>
-                  <p className="font-medium">{user?.gstNumber || '22AAAAA0000A1Z5'}</p>
+                  <span className="text-muted-foreground">Email:</span>
+                  <p className="font-medium">{user?.email}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Phone:</span>
-                  <p className="font-medium">{user?.phone || '+91 9876543210'}</p>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">Address:</span>
-                  <p className="font-medium">{user?.address || '123 Business Park, Mumbai, Maharashtra 400001'}</p>
+                  <span className="text-muted-foreground">Member Since:</span>
+                  <p className="font-medium">{formatDate(user?.createdAt || new Date().toISOString())}</p>
                 </div>
               </div>
             </CardContent>
@@ -340,9 +336,10 @@ export default function AdvertiserProfile() {
       </Tabs>
 
       {/* Modals */}
-      <AddFundsModal
-        isOpen={showAddFunds}
-        onClose={() => setShowAddFunds(false)}
+      <AddFundsModal 
+        isOpen={showAddFunds} 
+        onClose={() => setShowAddFunds(false)} 
+        userId={user.id}
       />
 
       <EditProfileModal

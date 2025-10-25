@@ -93,7 +93,7 @@ export function ProposalBuilderModal({ isOpen, onClose, rfpId }: ProposalBuilder
     const typeMatch = rfp.mediaTypes.includes(screen.type);
     
     // Check if screen is available (not booked for the RFP dates)
-    const dateMatch = !isScreenBooked(screen.id, rfp.dates.start, rfp.dates.end);
+    const dateMatch = !isScreenBooked(screen.id, new Date(rfp.startDate), new Date(rfp.endDate));
     
     return cityMatch && typeMatch && dateMatch;
   });
@@ -133,7 +133,7 @@ export function ProposalBuilderModal({ isOpen, onClose, rfpId }: ProposalBuilder
 
   useEffect(() => {
     const total = selectedScreens.reduce((sum, screen) => {
-      const days = rfp ? Math.ceil((rfp.dates.end.getTime() - rfp.dates.start.getTime()) / (1000 * 60 * 60 * 24)) : 1;
+      const days = rfp ? Math.ceil((new Date(rfp.endDate).getTime() - new Date(rfp.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 1;
       return sum + (screen.price * days);
     }, 0);
     
@@ -148,32 +148,29 @@ export function ProposalBuilderModal({ isOpen, onClose, rfpId }: ProposalBuilder
     setIsSubmitting(true);
     
     try {
-      const proposal: Proposal = {
-        id: `P${Date.now()}`,
-        rfpId: rfp.id,
-        ownerId: user.id,
-        campaignName: data.campaignName,
-        screens: data.screens,
-        amount: data.totalAmount,
-        status: 'submitted',
+      const proposalData = {
+        screens: selectedScreens.map(s => {
+          const screen = availableScreens.find(as => as.id === s.screenId);
+          return {
+            screenId: s.screenId,
+            screenName: screen?.name || '',
+            price: s.price,
+            rationale: s.rationale || '',
+          };
+        }),
+        rationale: data.description || 'Competitive pricing for selected screens',
         description: data.description || '',
-        attachments: [], // Would handle file uploads
-        createdAt: new Date(),
-        submittedAt: new Date(),
-        advertiserId: rfp.advertiserId,
       };
 
-      createProposal(proposal);
+      createProposal(proposalData, rfp.id, user.id, rfp.advertiserId, data.campaignName);
 
       // Notify advertiser
       addNotification({
-        id: `NOTIF${Date.now()}`,
         userId: rfp.advertiserId,
         title: "New Proposal Received",
         message: `Media owner ${user.companyName || user.name} has submitted a proposal for your RFP "${rfp.campaignName}".`,
         type: 'proposal_received',
         read: false,
-        createdAt: new Date(),
       });
 
       toast({
@@ -375,7 +372,7 @@ export function ProposalBuilderModal({ isOpen, onClose, rfpId }: ProposalBuilder
                 <div className="space-y-3">
                   {selectedScreens.map(screen => {
                     const screenData = filteredScreens.find(s => s.id === screen.screenId);
-                    const days = Math.ceil((rfp.dates.end.getTime() - rfp.dates.start.getTime()) / (1000 * 60 * 60 * 24));
+                    const days = Math.ceil((new Date(rfp.endDate).getTime() - new Date(rfp.startDate).getTime()) / (1000 * 60 * 60 * 24));
                     const total = screen.price * days;
                     
                     return (

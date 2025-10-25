@@ -68,7 +68,11 @@ export function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProp
     setIsSubmitting(true);
     
     try {
-      updateUser(user.id, formData);
+      updateUser({
+        name: formData.name,
+        email: formData.email,
+        companyName: formData.companyName,
+      });
       
       toast({
         title: "Profile Updated",

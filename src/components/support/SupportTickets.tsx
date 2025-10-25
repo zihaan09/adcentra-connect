@@ -56,30 +56,11 @@ export function CreateTicketModal({ isOpen, onClose }: CreateTicketModalProps) {
     setIsSubmitting(true);
     
     try {
-      const ticket: SupportTicket = {
-        id: `TICKET${Date.now()}`,
-        userId: user.id,
-        subject: formData.subject,
-        category: formData.category,
-        priority: formData.priority as 'low' | 'medium' | 'high' | 'urgent',
-        status: 'open',
-        description: formData.description,
-        messages: [{
-          id: `MSG${Date.now()}`,
-          senderId: user.id,
-          senderType: 'user',
-          message: formData.description,
-          timestamp: new Date(),
-        }],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      createTicket(ticket);
+      createTicket(user.id, formData.subject, formData.category, formData.description);
 
       // Notify support team (simulated)
       addNotification({
-        userId: 'support', // Simulated support team ID
+        userId: 'support',
         type: 'support_ticket',
         title: 'New Support Ticket',
         message: `New ticket created: ${formData.subject}`,
@@ -292,7 +273,6 @@ export function TicketDetailModal({ isOpen, onClose, ticketId }: TicketDetailMod
       case 'open': return 'bg-warning text-warning-foreground';
       case 'in_progress': return 'bg-primary text-primary-foreground';
       case 'resolved': return 'bg-success text-success-foreground';
-      case 'closed': return 'bg-muted text-muted-foreground';
       default: return 'bg-secondary text-secondary-foreground';
     }
   };
@@ -462,7 +442,6 @@ export function TicketList({ tickets, onOpenTicket }: TicketListProps) {
       case 'open': return 'bg-warning text-warning-foreground';
       case 'in_progress': return 'bg-primary text-primary-foreground';
       case 'resolved': return 'bg-success text-success-foreground';
-      case 'closed': return 'bg-muted text-muted-foreground';
       default: return 'bg-secondary text-secondary-foreground';
     }
   };
@@ -551,7 +530,7 @@ export function TicketList({ tickets, onOpenTicket }: TicketListProps) {
                     <p className="text-sm text-muted-foreground mb-2">
                       #{ticket.id} • {ticket.category} • {ticket.messages.length} messages
                     </p>
-                    <p className="text-sm line-clamp-2">{ticket.description}</p>
+                    <p className="text-sm line-clamp-2">{ticket.messages[0]?.message || 'No description'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">

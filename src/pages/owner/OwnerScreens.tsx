@@ -25,8 +25,8 @@ export default function OwnerScreens() {
   const userScreens = user ? getScreensByOwner(user.id) : [];
   
   const filteredScreens = userScreens.filter(screen => {
-    if (activeTab === "static") return screen.type === "billboard" || screen.type === "static";
-    if (activeTab === "digital") return screen.type === "digital_display" || screen.type === "led";
+    if (activeTab === "static") return screen.type === "static";
+    if (activeTab === "digital") return screen.type === "digital";
     return true;
   });
 
@@ -154,8 +154,8 @@ export default function OwnerScreens() {
             <div className="flex items-center justify-between mb-6">
               <TabsList>
                 <TabsTrigger value="all">All ({userScreens.length})</TabsTrigger>
-                <TabsTrigger value="static">Static ({userScreens.filter(s => s.type === "billboard" || s.type === "static").length})</TabsTrigger>
-                <TabsTrigger value="digital">Digital ({userScreens.filter(s => s.type === "digital_display" || s.type === "led").length})</TabsTrigger>
+                <TabsTrigger value="static">Static ({userScreens.filter(s => s.type === "static").length})</TabsTrigger>
+                <TabsTrigger value="digital">Digital ({userScreens.filter(s => s.type === "digital").length})</TabsTrigger>
               </TabsList>
               
               <div className="flex gap-2">

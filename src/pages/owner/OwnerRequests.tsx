@@ -152,12 +152,12 @@ export default function OwnerRequests() {
                             <span className="text-muted-foreground">Proposals:</span>
                             <p className="font-medium">{rfp.proposalCount} received</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Campaign Dates:</span>
-                            <p className="font-medium">
-                              {formatDate(rfp.dates.start)} to {formatDate(rfp.dates.end)}
-                            </p>
-                          </div>
+                        <div>
+                          <span className="text-muted-foreground">Campaign Dates:</span>
+                          <p className="font-medium">
+                            {formatDate(rfp.startDate)} to {formatDate(rfp.endDate)}
+                          </p>
+                        </div>
                         </div>
                         <div className="flex gap-2">
                           {rfp.cities.map((city) => (
