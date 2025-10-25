@@ -37,6 +37,7 @@ interface AuthStore {
   user: User | null;
   login: (email: string, password: string, role: 'advertiser' | 'owner') => void;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
@@ -47,7 +48,6 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       
       login: (email: string, password: string, role: 'advertiser' | 'owner') => {
-        // Simple mock authentication - in real app, this would validate against backend
         const user: User = {
           id: generateId(),
           email,
@@ -58,6 +58,13 @@ export const useAuthStore = create<AuthStore>()(
         };
         
         set({ user, isAuthenticated: true });
+      },
+      
+      updateUser: (updates: Partial<User>) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({ user: { ...currentUser, ...updates } });
+        }
       },
       
       logout: () => {

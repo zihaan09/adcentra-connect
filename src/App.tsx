@@ -18,7 +18,6 @@ import OwnerRequests from "./pages/owner/OwnerRequests";
 import OwnerCampaigns from "./pages/owner/OwnerCampaigns";
 import OwnerSupport from "./pages/owner/OwnerSupport";
 import OwnerProfile from "./pages/owner/OwnerProfile";
-import { IntegrationTestSuite } from "./components/testing/IntegrationTestSuite";
 import { useAuthStore } from "./store";
 import { seedAllData } from "./lib/seedData";
 import { 
@@ -204,12 +203,6 @@ const App = () => {
                   </DashboardLayout>
                 </ProtectedRoute>
               } 
-            />
-            
-            {/* Test Route */}
-            <Route 
-              path="/test" 
-              element={<IntegrationTestSuite />} 
             />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
