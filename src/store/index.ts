@@ -77,6 +77,7 @@ interface RFPStore {
   updateRFP: (id: string, updates: Partial<RFP>) => void;
   getRFPById: (id: string) => RFP | undefined;
   getRFPsByAdvertiser: (advertiserId: string) => RFP[];
+  getOpenRFPs: () => RFP[];
   expireRFP: (id: string) => void;
   incrementProposalCount: (rfpId: string) => void;
 }
@@ -96,6 +97,7 @@ export const useRFPStore = create<RFPStore>()(
           type: isScreenwise ? 'screenwise' : 'normal',
           budget: isScreenwise ? 0 : data.budgetRange.max,
           budgetRange: isScreenwise ? undefined : data.budgetRange,
+          dates: { start: data.startDate, end: data.endDate },
           startDate: data.startDate,
           endDate: data.endDate,
           cities: isScreenwise ? [] : data.cities,
@@ -130,6 +132,10 @@ export const useRFPStore = create<RFPStore>()(
         return get().rfps.filter(rfp => rfp.advertiserId === advertiserId);
       },
       
+      getOpenRFPs: () => {
+        return get().rfps.filter(rfp => rfp.status === 'open');
+      },
+      
       expireRFP: (id: string) => {
         set(state => ({
           rfps: state.rfps.map(rfp => 
@@ -155,7 +161,7 @@ export const useRFPStore = create<RFPStore>()(
 // Proposal Store
 interface ProposalStore {
   proposals: Proposal[];
-  createProposal: (data: ProposalFormData, rfpId: string, ownerId: string, advertiserId: string) => void;
+  createProposal: (data: ProposalFormData, rfpId: string, ownerId: string, advertiserId: string, campaignName: string) => void;
   updateProposal: (id: string, updates: Partial<Proposal>) => void;
   getProposalsByRFP: (rfpId: string) => Proposal[];
   getProposalsByOwner: (ownerId: string) => Proposal[];
@@ -166,13 +172,16 @@ export const useProposalStore = create<ProposalStore>()(
     (set, get) => ({
       proposals: [],
       
-      createProposal: (data: ProposalFormData, rfpId: string, ownerId: string, advertiserId: string) => {
+      createProposal: (data: ProposalFormData, rfpId: string, ownerId: string, advertiserId: string, campaignName: string) => {
+        const totalAmt = data.screens.reduce((sum, screen) => sum + screen.price, 0);
         const proposal: Proposal = {
           id: generateProposalId(),
           rfpId,
+          campaignName,
           ownerId,
           screens: data.screens,
-          totalAmount: data.screens.reduce((sum, screen) => sum + screen.price, 0),
+          amount: totalAmt,
+          totalAmount: totalAmt,
           rationale: data.rationale,
           description: data.description,
           attachments: [],
@@ -338,12 +347,19 @@ export const useCampaignStore = create<CampaignStore>()(
           proposalId,
           advertiserId,
           ownerId,
+          campaignName: rfp.campaignName,
           name: rfp.campaignName,
-          screens: proposal.screens.map(s => s.screenId),
+          budget: proposal.totalAmount,
+          screens: proposal.screens.map(s => ({
+            screenId: s.screenId,
+            screenName: s.screenName,
+            price: s.price
+          })),
           startDate: rfp.startDate,
           endDate: rfp.endDate,
           totalAmount: proposal.totalAmount,
           advanceAmount,
+          balanceAmount: proposal.totalAmount - advanceAmount,
           status: 'draft',
           createdAt: new Date().toISOString(),
         };
@@ -409,8 +425,10 @@ export const useCampaignStore = create<CampaignStore>()(
 interface ScreenStore {
   screens: Screen[];
   addScreen: (data: ScreenFormData, ownerId: string) => void;
+  createScreen: (data: ScreenFormData, ownerId: string) => void;
   updateScreen: (id: string, updates: Partial<Screen>) => void;
   deleteScreen: (id: string) => void;
+  getScreenById: (id: string) => Screen | undefined;
   getScreensByOwner: (ownerId: string) => Screen[];
   getAvailableScreens: (city?: string, type?: string) => Screen[];
 }
@@ -433,9 +451,35 @@ export const useScreenStore = create<ScreenStore>()(
           illumination: data.illumination,
           baseRate: data.baseRate,
           discountedRate: data.discountedRate,
+          pricePerDay: data.baseRate,
           status: 'active',
           ownerId,
           image: data.image ? URL.createObjectURL(data.image) : undefined,
+          createdAt: new Date().toISOString(),
+          availability: [],
+        };
+        
+        set(state => ({ screens: [...state.screens, screen] }));
+      },
+      
+      createScreen: (data: ScreenFormData, ownerId: string) => {
+        const screen: Screen = {
+          id: generateId(),
+          name: data.name,
+          location: data.location,
+          city: data.city,
+          type: data.type,
+          environment: data.environment,
+          format: data.format,
+          size: data.size,
+          illumination: data.illumination,
+          baseRate: data.baseRate,
+          discountedRate: data.discountedRate,
+          pricePerDay: data.baseRate,
+          status: 'active',
+          ownerId,
+          image: data.image ? URL.createObjectURL(data.image) : undefined,
+          createdAt: new Date().toISOString(),
           availability: [],
         };
         
@@ -454,6 +498,10 @@ export const useScreenStore = create<ScreenStore>()(
         set(state => ({
           screens: state.screens.filter(screen => screen.id !== id)
         }));
+      },
+      
+      getScreenById: (id: string) => {
+        return get().screens.find(screen => screen.id === id);
       },
       
       getScreensByOwner: (ownerId: string) => {

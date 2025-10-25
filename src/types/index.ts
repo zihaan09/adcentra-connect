@@ -15,6 +15,7 @@ export interface RFP {
   type: 'normal' | 'screenwise';
   budget: number;
   budgetRange?: { min: number; max: number };
+  dates: { start: string; end: string };
   startDate: string;
   endDate: string;
   cities: string[];
@@ -33,13 +34,15 @@ export interface RFP {
 export interface Proposal {
   id: string;
   rfpId: string;
+  campaignName: string;
   ownerId: string;
   screens: ProposalScreen[];
+  amount: number;
   totalAmount: number;
   rationale: string;
   description: string;
   attachments?: string[];
-  status: 'pending' | 'hold_requested' | 'accepted' | 'rejected';
+  status: 'pending' | 'hold_requested' | 'accepted' | 'rejected' | 'submitted';
   submittedAt: string;
   advertiserId: string;
 }
@@ -71,20 +74,49 @@ export interface Campaign {
   proposalId: string;
   advertiserId: string;
   ownerId: string;
+  campaignName: string;
   name: string;
-  screens: string[];
+  budget: number;
+  screens: CampaignScreen[];
   startDate: string;
   endDate: string;
   totalAmount: number;
   advanceAmount: number;
+  balanceAmount: number;
   status: 'draft' | 'pending_approval' | 'live' | 'completed';
   createdAt: string;
-  creatives?: string[];
+  creatives?: CreativeFile[];
   po?: string;
-  proofOfPlay?: string[];
+  proofOfPlay?: ProofFile[];
   approvedAt?: string;
   completedAt?: string;
 }
+
+export interface CampaignScreen {
+  screenId: string;
+  screenName: string;
+  price: number;
+}
+
+export interface CreativeFile {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  uploadedAt: Date;
+}
+
+export interface ProofFile {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  uploadedAt: Date;
+}
+
+export type CampaignStatus = 'draft' | 'pending_approval' | 'live' | 'completed';
 
 export interface Screen {
   id: string;
@@ -98,9 +130,14 @@ export interface Screen {
   illumination: string;
   baseRate: number;
   discountedRate: number;
-  status: 'active' | 'booked' | 'maintenance';
+  pricePerDay: number;
+  description?: string;
+  specifications?: string;
+  imageUrl?: string;
+  status: 'active' | 'booked' | 'maintenance' | 'inactive';
   ownerId: string;
   image?: string;
+  createdAt: string;
   availability?: AvailabilitySlot[];
 }
 
@@ -113,7 +150,7 @@ export interface AvailabilitySlot {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'proposal_received' | 'hold_request' | 'hold_approved' | 'hold_rejected' | 'hold_expiring' | 'campaign_created' | 'payment' | 'support_reply';
+  type: 'proposal_received' | 'hold_request' | 'hold_approved' | 'hold_rejected' | 'hold_expiring' | 'campaign_created' | 'campaign_update' | 'payment' | 'support_reply' | 'support_ticket';
   title: string;
   message: string;
   read: boolean;
@@ -141,12 +178,16 @@ export interface SupportTicket {
   id: string;
   userId: string;
   subject: string;
+  priority: 'low' | 'medium' | 'high';
   category: 'payment' | 'booking' | 'technical' | 'other';
   status: 'open' | 'in_progress' | 'resolved';
   agentId?: string;
   createdAt: string;
+  updatedAt: string;
   messages: SupportMessage[];
 }
+
+export type TicketStatus = 'open' | 'in_progress' | 'resolved';
 
 export interface SupportMessage {
   id: string;
@@ -154,6 +195,7 @@ export interface SupportMessage {
   senderId: string;
   senderType: 'user' | 'agent';
   message: string;
+  timestamp: Date;
   createdAt: string;
 }
 
@@ -163,6 +205,7 @@ export interface ChatMessage {
   senderId: string;
   senderType: 'advertiser' | 'owner';
   message: string;
+  timestamp: Date;
   createdAt: string;
   read: boolean;
 }
@@ -227,6 +270,7 @@ export interface RFPStore {
   updateRFP: (id: string, updates: Partial<RFP>) => void;
   getRFPById: (id: string) => RFP | undefined;
   getRFPsByAdvertiser: (advertiserId: string) => RFP[];
+  getOpenRFPs: () => RFP[];
   expireRFP: (id: string) => void;
 }
 
@@ -260,9 +304,11 @@ export interface CampaignStore {
 export interface ScreenStore {
   screens: Screen[];
   addScreen: (data: ScreenFormData, ownerId: string) => void;
+  createScreen: (data: ScreenFormData, ownerId: string) => void;
   updateScreen: (id: string, updates: Partial<Screen>) => void;
   deleteScreen: (id: string) => void;
   getScreensByOwner: (ownerId: string) => Screen[];
+  getScreenById: (id: string) => Screen | undefined;
   getAvailableScreens: (city?: string, type?: string) => Screen[];
 }
 
@@ -279,6 +325,7 @@ export interface AuthStore {
   user: User | null;
   login: (email: string, password: string, role: 'advertiser' | 'owner') => void;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
   isAuthenticated: boolean;
 }
 
